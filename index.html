@@ -25,6 +25,24 @@
             overflow: hidden;
         }
 
+        .window-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            cursor: move;
+        }
+
+        .resize-handle {
+            width: 10px;
+            height: 10px;
+            background-color: #44475a;
+            position: absolute;
+            cursor: se-resize;
+            bottom: 0;
+            right: 0;
+        }
+
         #launcher {
             display: flex;
             gap: 10px;
@@ -56,13 +74,25 @@
     </div>
 
     <div id="Browser" class="window" style="display:none; left: 50px; top: 50px;">
+        <div class="window-header" id="Browser-header">
+            <span>Browser</span>
+            <button onclick="toggleMaximize('Browser')">⬜</button>
+            <button onclick="closeWindow('Browser')">X</button>
+        </div>
         <input type="text" id="urlInput" placeholder="Enter URL">
         <button onclick="openURL()">Go</button>
         <iframe id="browserFrame" frameborder="0"></iframe>
+        <div class="resize-handle" onmousedown="initResize('Browser')"></div>
     </div>
 
     <div id="CodeEditor" class="window" style="display:none; left: 200px; top: 200px;">
+        <div class="window-header" id="CodeEditor-header">
+            <span>Code Editor</span>
+            <button onclick="toggleMaximize('CodeEditor')">⬜</button>
+            <button onclick="closeWindow('CodeEditor')">X</button>
+        </div>
         <textarea id="codeArea"></textarea>
+        <div class="resize-handle" onmousedown="initResize('CodeEditor')"></div>
     </div>
 
     <script src="https://codemirror.net/lib/codemirror.js"></script>
@@ -74,6 +104,10 @@
             var windowElement = document.getElementById(windowId);
             windowElement.style.display = "block";
             makeDraggable(windowElement);
+        }
+
+        function closeWindow(windowId) {
+            document.getElementById(windowId).style.display = "none";
         }
 
         function openURL() {
@@ -89,9 +123,11 @@
 
         function makeDraggable(element) {
             var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            if (document.getElementById(element.id + "-header")) {
+            var header = document.getElementById(element.id + "-header");
+
+            if (header) {
                 // if present, the header is where you move the DIV from:
-                document.getElementById(element.id + "-header").onmousedown = dragMouseDown;
+                header.onmousedown = dragMouseDown;
             } else {
                 // otherwise, move the DIV from anywhere inside the DIV:
                 element.onmousedown = dragMouseDown;
@@ -125,6 +161,44 @@
                 // stop moving when mouse button is released:
                 document.onmouseup = null;
                 document.onmousemove = null;
+            }
+        }
+
+        function initResize(windowId) {
+            var windowElement = document.getElementById(windowId);
+            var startWidth = windowElement.offsetWidth;
+            var startHeight = windowElement.offsetHeight;
+            var startX = event.clientX;
+            var startY = event.clientY;
+
+            document.onmousemove = function (e) {
+                var newWidth = startWidth + (e.clientX - startX);
+                var newHeight = startHeight + (e.clientY - startY);
+
+                if (newWidth > 200 && newHeight > 200) {
+                    windowElement.style.width = newWidth + 'px';
+                    windowElement.style.height = newHeight + 'px';
+                }
+            };
+
+            document.onmouseup = function () {
+                document.onmousemove = null;
+                document.onmouseup = null;
+            };
+        }
+
+        function toggleMaximize(windowId) {
+            var windowElement = document.getElementById(windowId);
+            var header = document.getElementById(windowId + "-header");
+
+            if (windowElement.style.width === "100%" && windowElement.style.height === "100%") {
+                // Restore to original size
+                windowElement.style.width = "800px";
+                windowElement.style.height = "600px";
+            } else {
+                // Maximize
+                windowElement.style.width = "100%";
+                windowElement.style.height = "100%";
             }
         }
     </script>
